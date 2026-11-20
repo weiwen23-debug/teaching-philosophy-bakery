@@ -86,7 +86,7 @@ function submitReflection({top,secondary,scores}) {
  if(submitted){status.textContent='This response has already been submitted.';return;}
  if(name.length<2){status.textContent='Please enter your name.';return;}
  if(!document.getElementById('consent').checked){status.textContent='Please confirm that you agree to submit your named responses.';return;}
- if(!/^https:\/\/script\.google\.com\/macros\/s\/.+\/exec$/.test(SUBMISSION_URL)) {status.textContent='The facilitator has not configured the Google Sheets submission link yet.';return;}
+ if(!/^https:\/\/script\.google\.com\/(?:a\/macros\/[^/]+\/)?macros\/s\/[^/]+\/exec$/.test(SUBMISSION_URL)) {status.textContent='The facilitator has not configured the Google Sheets submission link yet.';return;}
  const payload={name,level:document.getElementById('level').value,answers:[...answers],scores,
  pastry:profiles[top].name,role:profiles[top].role,philosophy:profiles[top].philosophy,
  secondary:secondary===undefined?'':profiles[secondary].philosophy,
