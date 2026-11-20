@@ -80,36 +80,109 @@ const insights=[
 ];
 function results(){submitted=false;let scores=profiles.map((_,i)=>answers.filter(x=>x===i).length);let order=profiles.map((_,i)=>i).sort((a,b)=>scores[b]-scores[a]||a-b);let top=order[0],p=profiles[top],secondary=order.find(i=>i!==top&&scores[i]>0),ins=insights[top];app.innerHTML=`<div class="eyebrow">Your personal teaching philosophy summary</div><img class="pastry-image" src="${pastryPicture(top)}" alt="Illustration of ${p.name}"><h1>${p.name}</h1><h2>${p.role}</h2><div class="tag">${p.philosophy}</div><p class="muted">Your pastry is a playful metaphor for the beliefs you prioritised in these classroom dilemmas. It is not a label or a judgement of your teaching.</p><div class="result"><h2>What you believe about learning</h2><p>${ins[0]}</p><h2>How this may show up in your classroom</h2><p>${ins[1]}</p><h2>Your distinctive strength</h2><p>${p.strength}.</p><h2>A possible blind spot</h2><p>${p.stretch}</p><p><em>“${p.motto}”</em></p></div><div class="result"><h2>Your Teaching Flavour Partner</h2><div class="partner"><img src="${pastryPicture(partners[top])}" alt="Illustration of ${profiles[partners[top]].name}"><div><strong>${profiles[partners[top]].name}</strong><p>${profiles[partners[top]].role}</p><p>${profiles[partners[top]].philosophy}</p></div></div><p>${partnerReasons[top]}</p><p><strong>Reflect:</strong> What could a colleague with this philosophy help me notice or do differently in my classroom?</p><p class="muted">This is a complementary perspective, not a fixed compatibility score.</p></div><h2>Look beneath your teaching decisions</h2><p><strong>Question worth asking:</strong> ${ins[2]}</p><p><strong>One classroom move to try:</strong> ${ins[3]}</p>${secondary!==undefined?`<p><strong>Another belief you also seem to value:</strong> ${profiles[secondary].role} (${profiles[secondary].philosophy}). Our beliefs are rarely just one flavour.</p>`:''}<h2>From beliefs to classroom practice</h2><p>Think about what pupils actually experience, not just what you intend.</p><label for="evidence"><strong>1. Recall a recent lesson. What specific teaching decision showed this belief in action?</strong></label><textarea id="evidence" rows="3" placeholder="What did I do? What did pupils experience?"></textarea><label for="tension"><strong>2. When did time, assessment or syllabus coverage make it hard to act on this belief?</strong></label><textarea id="tension" rows="3" placeholder="What did I prioritise, and what was the trade-off?"></textarea><label for="action"><strong>3. What is one change I will try so that my practice better reflects my beliefs?</strong></label><textarea id="action" rows="3" placeholder="In my next lesson, I will... because..."></textarea><p class="muted">For dialogue with a colleague: Would your pupils recognise this teaching philosophy in your lessons? What evidence would they point to?</p><div class="result no-print"><h2>Submit your reflection to the facilitator</h2><p>Your name, teaching level (if provided), all 18 choices, personality result and written reflections will be stored in a private Google Sheet accessible to the activity facilitators. Please do not include student names or identifying details in your reflections. This is for professional learning, not appraisal.</p><label for="teacherName"><strong>Your name (required)</strong></label><input id="teacherName" maxlength="120" autocomplete="name" placeholder="Your full name" style="width:100%;padding:12px;border:1px solid #bba594;border-radius:8px;margin:7px 0 14px"><label for="level"><strong>Teaching level (optional)</strong></label><select id="level" style="width:100%;padding:12px;border:1px solid #bba594;border-radius:8px;margin:7px 0 14px"><option value="">Prefer not to say</option><option>Lower Primary</option><option>Upper Primary</option><option>Both</option><option>Other</option></select><label style="display:flex;gap:10px;align-items:flex-start;margin:12px 0"><input id="consent" type="checkbox" style="margin-top:5px"><span>I understand what is being collected and agree to submit my named responses for this staff professional learning activity.</span></label><button class="button" id="submit" type="button">Submit my reflection</button><p id="submitStatus" role="status" aria-live="polite"></p></div><div class="actions no-print"><button class="ghost" id="restart">↻ Start again</button><button class="button" id="print">Print / Save my philosophy summary</button></div><p class="footer">A reflective conversation starter, not a validated assessment or appraisal tool. All nine teaching orientations offer value; strong practice draws on more than one.</p>`;document.getElementById('submit').onclick=()=>submitReflection({top,secondary,scores});document.getElementById('restart').onclick=()=>{answers.fill(null);intro()};document.getElementById('print').onclick=()=>{['evidence','tension','action'].forEach(id=>{let e=document.getElementById(id);e.textContent=e.value});window.print()}}
 
-function submitReflection({top,secondary,scores}) {
- const status=document.getElementById('submitStatus'),button=document.getElementById('submit');
- const name=document.getElementById('teacherName').value.trim();
- if(submitted){status.textContent='This response has already been submitted.';return;}
- if(name.length<2){status.textContent='Please enter your name.';return;}
- if(!document.getElementById('consent').checked){status.textContent='Please confirm that you agree to submit your named responses.';return;}
- if(!/^https:\/\/script\.google\.com\/(?:a\/macros\/[^/]+\/)?macros\/s\/[^/]+\/exec$/.test(SUBMISSION_URL)) {status.textContent='The facilitator has not configured the Google Sheets submission link yet.';return;}
- const payload={name,level:document.getElementById('level').value,answers:[...answers],scores,
- pastry:profiles[top].name,role:profiles[top].role,philosophy:profiles[top].philosophy,
- secondary:secondary===undefined?'':profiles[secondary].philosophy,
- evidence:document.getElementById('evidence').value,tension:document.getElementById('tension').value,action:document.getElementById('action').value};
- const requestId='bakery-'+Date.now()+'-'+Math.random().toString(36).slice(2);
- const iframe=document.createElement('iframe');iframe.name='submission_'+requestId;iframe.style.display='none';document.body.appendChild(iframe);
- const form=document.createElement('form');form.method='POST';form.action=SUBMISSION_URL;form.target=iframe.name;form.style.display='none';
- for(const [key,value] of Object.entries({requestId,payload:JSON.stringify(payload)})){const field=document.createElement('input');field.name=key;field.value=value;form.appendChild(field)}
- document.body.appendChild(form);button.disabled=true;status.textContent='Submitting…';
- let done=false;
- const cleanup=()=>{window.removeEventListener('message',receive);clearTimeout(timeout);form.remove();setTimeout(()=>iframe.remove(),1000)};
- const receive=(event)=>{
-   // Apps Script HTML responses come from Google's hosted response origin.
-   if(!/^https:\/\/([a-z0-9-]+\.)?googleusercontent\.com$/.test(event.origin) && event.origin!=='https://script.google.com')return;
-   const data=event.data;
-   if(!data||typeof data!=='object'||data.requestId!==requestId||done)return;
-   done=true;cleanup();
-   if(data.status==='ok'){submitted=true;status.textContent='✓ Submitted successfully. Thank you for reflecting!';button.textContent='Submitted';}
-   else {status.textContent='Submission failed: '+(data.message||'Please try again.');button.disabled=false;}
- };
- window.addEventListener('message',receive);
- const timeout=setTimeout(()=>{if(done)return;done=true;cleanup();status.textContent='No confirmation received. Please ask the facilitator to check the Sheet before retrying, to avoid duplicate responses.';button.disabled=false},20000);
- form.submit();
+function submitReflection({top, secondary, scores}) {
+  const status = document.getElementById('submitStatus');
+  const button = document.getElementById('submit');
+  const name = document.getElementById('teacherName').value.trim();
+
+  // Prevent duplicate submissions
+  if (submitted) {
+    status.textContent = 'This response has already been sent.';
+    return;
+  }
+
+  // Name is compulsory for pastry collection
+  if (name.length < 2) {
+    status.textContent =
+      'Please enter your full name so we can identify your pastry.';
+    document.getElementById('teacherName').focus();
+    return;
+  }
+
+  // Consent is compulsory
+  if (!document.getElementById('consent').checked) {
+    status.textContent =
+      'Please confirm that you agree to submit your named responses.';
+    return;
+  }
+
+  // Check Google Apps Script URL
+  if (!/^https:\/\/script\.google\.com\/(?:a\/macros\/[^/]+\/)?macros\/s\/[^/]+\/exec$/.test(SUBMISSION_URL)) {
+    status.textContent =
+      'The facilitator has not configured the Google Sheets submission link yet.';
+    return;
+  }
+
+  // Prepare teacher responses
+  const payload = {
+    name,
+    level: document.getElementById('level').value,
+    answers: [...answers],
+    scores,
+    pastry: profiles[top].name,
+    role: profiles[top].role,
+    philosophy: profiles[top].philosophy,
+    secondary: secondary === undefined
+      ? ''
+      : profiles[secondary].philosophy,
+    evidence: document.getElementById('evidence').value,
+    tension: document.getElementById('tension').value,
+    action: document.getElementById('action').value
+  };
+
+  // Unique submission reference
+  const requestId =
+    'bakery-' + Date.now() + '-' +
+    Math.random().toString(36).slice(2);
+
+  // Create hidden iframe
+  const iframe = document.createElement('iframe');
+  iframe.name = 'submission_' + requestId;
+  iframe.style.display = 'none';
+  document.body.appendChild(iframe);
+
+  // Create submission form
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = SUBMISSION_URL;
+  form.target = iframe.name;
+  form.style.display = 'none';
+
+  // Add submission data
+  for (const [key, value] of Object.entries({
+    requestId,
+    payload: JSON.stringify(payload)
+  })) {
+    const field = document.createElement('input');
+    field.name = key;
+    field.value = value;
+    form.appendChild(field);
+  }
+
+  document.body.appendChild(form);
+
+  // Prevent repeated clicks
+  button.disabled = true;
+  button.textContent = 'Submitted';
+
+  // Send response to Google Sheets
+  form.submit();
+
+  submitted = true;
+
+  // Display thank-you message
+  status.textContent =
+    'Thank you, ' + name + '! 🥐 ' +
+    'Your teaching philosophy and reflections have been sent. ' +
+    'Please show your pastry result to the facilitator. ' +
+    'Enjoy your pastry!';
+
+  // Clean up hidden elements
+  setTimeout(() => {
+    form.remove();
+    iframe.remove();
+  }, 30000);
+}
 }
 
 intro();</script></body></html>
