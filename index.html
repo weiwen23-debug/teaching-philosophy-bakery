@@ -143,10 +143,10 @@ function submitReflection({top, secondary, scores}) {
     return;
   }
 
-  // Name is compulsory for pastry collection
+  // Name is compulsory for facilitator records
   if (name.length < 2) {
     status.textContent =
-      'Please enter your full name so we can identify your pastry.';
+      'Please enter your full name so we can identify your submission.';
     document.getElementById('teacherName').focus();
     return;
   }
@@ -227,7 +227,7 @@ function submitReflection({top, secondary, scores}) {
     'Thank you, ' + name + '! 🥐 ' +
     'Your teaching philosophy result has been sent for processing. ' +
     'Please check with the facilitator that your response appears in the Sheet. ' +
-    'Enjoy your pastry!';
+    'Thank you for taking time to reflect!';
 
   // Clean up hidden elements
   setTimeout(() => {
