@@ -90,13 +90,46 @@ const runnerUpScore=Math.max(0,...scores.filter((_,i)=>i!==top));
 const supporting=tied.length>1
  ? tied.filter(i=>i!==top)
  : order.filter(i=>i!==top && scores[i]===runnerUpScore && scores[i]>0);
+const teachingMoves=[
+ 'build trust and predictable routines so pupils feel secure enough to learn',
+ 'adapt the support and pathways available to pupils with different needs',
+ 'help pupils examine their thinking and learn from experience',
+ 'build strong understanding through clear explanations, practice and feedback',
+ 'experiment with fresh approaches while keeping learning goals in view',
+ 'create opportunities for pupils to learn through dialogue and collaboration',
+ 'stretch pupils through worthwhile challenges and help them learn from setbacks',
+ 'invite pupils to ask questions, investigate and discover ideas for themselves',
+ 'connect learning to character, responsibility and everyday choices'
+];
+const teachingConsiderations=[
+ 'how to offer reassurance without taking away pupils’ independence',
+ 'how to meet different needs while keeping a clear goal for everyone',
+ 'when reflection should lead to action',
+ 'when to explain and model, and when to step aside',
+ 'whether a new approach leads to better learning, not just excitement',
+ 'whether every pupil is learning, not only the most vocal group members',
+ 'how much challenge is productive before pupils need support',
+ 'when exploration needs clearer guidance',
+ 'how to give pupils real opportunities to practise the values being discussed'
+];
 const supportingList=supporting.map(i=>
- `<p><strong>${profiles[i].role} (${scores[i]} of 15 choices):</strong> ${insights[i][0]} ${insights[i][1]}</p>`
+ `<p><strong>${profiles[i].role}:</strong> Your choices also suggest that you value finding ways to ${teachingMoves[i]}.</p>`
 ).join('');
+const blendHeading=tied.length>1?'How your teaching beliefs come together':'The different sides of your teaching';
 const blendExplanation=tied.length>1
- ? `Your choices placed ${tied.length} teaching philosophies equally highest at ${high} out of 15 choices. Your final pastry was selected using the earliest answer among these tied philosophies; this does not make it more important than the others.`
- : `Your strongest indicated philosophy is ${p.role}, reflected in ${high} of your 15 choices. ${supporting.length ? `The following ${supporting.length===1?'philosophy was':'philosophies were'} also represented in your answers (${runnerUpScore} ${runnerUpScore===1?'choice':'choices'} each).` : 'Your choices also reflect other approaches, even if no single supporting philosophy stands out.'}`;
-const blendIntro=`<div class="result"><h2>Your Teaching Philosophy Blend</h2><p>${blendExplanation}</p><p><strong>${p.role}:</strong> ${insights[top][0]} ${insights[top][1]}</p>${supportingList}<p><strong>How these beliefs can work together:</strong> ${tied.length>1?'These equally represented approaches':'Your strongest orientation and these supporting approaches'} can complement one another. You can draw on clarity, care, reflection, inquiry or other strengths according to what your pupils need, rather than relying on a single teaching style.</p><p><strong>A possible tension:</strong> ${profiles[top].stretch}${supporting.length ? ' '+profiles[supporting[0]].stretch : ''}</p><p><strong>Reflect:</strong> In which situations might you rely on your strongest orientation, and when might pupils benefit from one of the other approaches?</p><p class="muted">These scores describe choices in a short reflection activity, not fixed traits or a validated assessment. You still receive one final pastry.</p></div>`;
+ ? `Your answers gave ${tied.length} teaching approaches the same highest score (${high} choices each). You will still receive one pastry, selected using your earliest answer among these approaches. That choice is only a way to select a pastry; it does not make one belief more important than the others.`
+ : `Your responses most often reflected ${p.role} (${high} of 15 choices). ${supporting.length ? `You also drew on ${supporting.map(i=>profiles[i].role).join(' and ')} (${runnerUpScore} ${runnerUpScore===1?'choice':'choices'} each).` : 'Your teaching decisions may draw on other approaches in different situations.'}`;
+const blendDescription=`<p><strong>${p.role}:</strong> You seem to value opportunities to ${teachingMoves[top]}.</p>${supportingList}`;
+const combination=supporting.length
+ ? `These approaches can strengthen one another. You may begin by helping pupils ${teachingMoves[top]}, while also making space to ${supporting.map(i=>teachingMoves[i]).join(' and to ')}. The right balance will depend on your pupils, the lesson and the learning you want to see.`
+ : `Your choices point towards ${teachingMoves[top]}. That can be a useful starting point, while other situations may call for different approaches.`;
+const tension=supporting.length
+ ? `You may need to decide ${teachingConsiderations[top]} while also considering ${teachingConsiderations[supporting[0]]}. Neither priority has to be abandoned; the challenge is knowing what your pupils need at that moment.`
+ : `One question worth considering is ${teachingConsiderations[top]}.`;
+const reflection=supporting.length
+ ? `Think about a recent lesson. When did you choose to ${teachingMoves[top]}? Was there a moment when it might have helped to ${teachingMoves[supporting[0]]} instead? What evidence from pupils would guide your decision?`
+ : `Think about a recent lesson. When did this approach help pupils learn, and when might a different approach have helped more?`;
+const blendIntro=`<div class="result"><h2>${blendHeading}</h2><p>${blendExplanation}</p>${blendDescription}<p><strong>How these approaches can work together:</strong> ${combination}</p><p><strong>A balance to consider:</strong> ${tension}</p><p><strong>For your reflection:</strong> ${reflection}</p><p class="muted">This is a starting point for reflection, not a fixed label or a formal assessment. You still receive one pastry.</p></div>`;
 app.innerHTML=`<div class="eyebrow">Your personal teaching philosophy summary</div><img class="pastry-image" src="${pastryPicture(top)}" alt="Illustration of ${p.name}"><h1>${p.name}</h1><h2>${p.role}</h2><div class="tag">${p.philosophy}</div><p class="muted">Your pastry is a playful metaphor for one of the beliefs you prioritised in these classroom dilemmas. It is not a label or a judgement of your teaching.</p>${blendIntro}<div class="result"><h2>What you believe about learning</h2><p>${ins[0]}</p><h2>How this may show up in your classroom</h2><p>${ins[1]}</p><h2>Your distinctive strength</h2><p>${p.strength}.</p><h2>A possible blind spot</h2><p>${p.stretch}</p><h2>Your teaching motto</h2><p><em>“${p.motto}”</em></p></div><div class="result"><h2>Your Teaching Flavour Partner</h2><div class="partner"><img src="${pastryPicture(partners[top])}" alt="Illustration of ${profiles[partners[top]].name}"><div><strong>${profiles[partners[top]].name}</strong><p>${profiles[partners[top]].role}</p><p>${profiles[partners[top]].philosophy}</p></div></div><p>${partnerReasons[top]}</p><p><strong>Reflect:</strong> What could a colleague with this philosophy help me notice or do differently in my classroom?</p><p class="muted">This is a complementary perspective, not a fixed compatibility score.</p></div><h2>Look beneath your teaching decisions</h2><p><strong>Question worth asking:</strong> ${ins[2]}</p><p><strong>One classroom move to try:</strong> ${ins[3]}</p><div class="result no-print"><h2>Submit your reflection to the facilitator</h2><p>Your name, teaching level (if provided), all 15 choices and pastry result will be stored in a private Google Sheet accessible to the activity facilitators. This is for professional learning, not appraisal.</p><label for="teacherName"><strong>Your name (required)</strong></label><input required minlength="2" id="teacherName" maxlength="120" autocomplete="name" placeholder="Your full name" style="width:100%;padding:12px;border:1px solid #bba594;border-radius:8px;margin:7px 0 14px"><label for="level"><strong>Teaching level (optional)</strong></label><select id="level" style="width:100%;padding:12px;border:1px solid #bba594;border-radius:8px;margin:7px 0 14px"><option value="">Prefer not to say</option><option>Lower Primary</option><option>Upper Primary</option><option>Both</option><option>Other</option></select><label style="display:flex;gap:10px;align-items:flex-start;margin:12px 0"><input id="consent" type="checkbox" style="margin-top:5px"><span>I understand what is being collected and agree to submit my named responses for this staff professional learning activity.</span></label><button class="button" id="submit" type="button">Submit my reflection</button><p id="submitStatus" role="status" aria-live="polite"></p></div><div class="actions no-print"><button class="ghost" id="restart">↻ Start again</button><button class="button" id="print">Print / Save my philosophy summary</button></div><p class="footer">A reflective conversation starter, not a validated assessment or appraisal tool. All nine teaching orientations offer value; strong practice draws on more than one.</p>`;document.getElementById('submit').onclick=()=>submitReflection({top,secondary,scores});document.getElementById('restart').onclick=()=>{answers.fill(null);intro()};document.getElementById('print').onclick=()=>{window.print()}}
 
 function submitReflection({top, secondary, scores}) {
